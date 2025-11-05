@@ -53,22 +53,23 @@ https://developer.apple.com/documentation/vision/recognizing-objects-in-live-cap
 
 [Metal Programming Guide,  Janie Clayton, Addison-Wesley, 2017](https://www.safaribooksonline.com/library/view/metal-programming-guide/9780134668963/ch06.xhtml)
 
-[Apple Developer: Metal sample code](https://developer.apple.com/search/?q=metal%20sample&type=Sample%20Code)
+[Apple Developer Sample Code: Metal samples](https://developer.apple.com/search/?q=metal%20sample&type=Sample%20Code)
 
+## Capture Pathway: AVFoundation, Metal
 
 NOTE: 
 - The original version sourced images from already acquired frame file sequence and texture shader to render as the intention was to illustrate riffing through an ultrasound image clip or movie. The code was shifted away to files and not use the device camera.
 - Past work on `AVFoundation` realized a camera in iOS, but with a spin that the frames were displayed after being loaded into a Texture in a Shader in a Metal view.
 
-Reference the `MetalRenderCamera` project code repository on Github which was an implementation of a Metal camera that also provided low friction access to the Texture to apply Shaders to.
+Reference external dependency or SOUP that will be removed - the `MetalRenderCamera` project code repository on Github. This project has been around for awhile and it was a good Metal camera reference implementation even back in 2016-2018. It also provided low friction example(s) of Texture handling Shaders as well.
 
- [SOUP: MetalRenderCamera](https://github.com/alexstaravoitau/MetalRenderCamera)
+ [ MetalRenderCamera](https://github.com/alexstaravoitau/MetalRenderCamera)
 
 The open source project wired in has some collisions with known concurrency issues that were raised around `AVFoundation` and Swift 5 and 6. A recently published approach from Apple in the form of a ground up rewrite of a Metal based camera is URLd below. It requires iOS 26 and will be approached when I have an iPhone that has been upgraded to 26.
 
-Reference this (new) Apple sample application that advertises to be a reinvention of the approach and from code walkthrough appears to bring things in line with latest Swift concurrency aspects.
+Reference this (new) Apple sample application that advertises to be a reinvention of the approach around `AVFoundation` and `Metal` to realize a camera capture pathy. From code walkthrough appears to bring things in line with latest Swift concurrency aspects.
 
-[Apple Sample: AVFoundation, Metal Camera](https://developer.apple.com/documentation/AVFoundation/avcam-building-a-camera-app)
+[Apple Developer Sample: Building a Camera APP, avcam](https://developer.apple.com/documentation/AVFoundation/avcam-building-a-camera-app)
 
  See also below as a cross references:
  
