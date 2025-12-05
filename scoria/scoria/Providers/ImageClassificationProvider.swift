@@ -12,7 +12,7 @@
 // Apache License Version 2.0, January 2004
 //
 // NOTES:
-// ImageClassificationProvider is a refactor of ImagePredictor
+// ImageClassificationProvider is a (WIP) refactor of ImagePredictor
 //
 import UIKit
 import ImageIO
@@ -69,8 +69,7 @@ extension VNClassificationObservation {
 /// - Starts an image classification request for that image
 /// - Converts the prediction results in a completion handler
 /// - Updates the delegate's `predictions` property
-/// - Tag: ImageClassificationProvider
-///
+/// - Tag: ImagePredictor
 class ImageClassificationProvider {
     /// - Tag: name
     static func createImageClassifier() -> VNCoreMLModel {

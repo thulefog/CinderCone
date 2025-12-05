@@ -9,6 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import opencv2 //OpenCV
 
+import CxxStdlib
 
 struct ContentView: View {
     @State private var selectedImage: NSImage?
@@ -16,6 +17,8 @@ struct ContentView: View {
     @State private var isShowingFilePicker = false
     @State private var dragOver = false
     @State private var showOriginal = true
+    
+    @State private var selectedFile: URL?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -69,7 +72,7 @@ struct ContentView: View {
             .onDrop(of: [UTType.image], isTargeted: $dragOver) { providers in
                 handleDrop(providers: providers)
             }
-            
+
             // Control buttons
             HStack(spacing: 20) {
                 Button("Select Image") {
