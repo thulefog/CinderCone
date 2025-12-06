@@ -13,29 +13,6 @@ extension UTType {
       static let edfDocument = UTType(importedAs: "co.aquavit.edf-document", conformingTo: .data)
   }
 
-/*
-NavigationView {
-    VStack{
-        NavigationLink(destination: FilePickerView(selectedFileURL: $selectedFile)) {
-            Text("Select Data File")
-        }
-    }
-}
- ...
- Button("Read Data File") {
-
-     if let file = selectedFile {
-         Text("File selected in parent: \(file.lastPathComponent)")
-             .padding()
-     }
-     
-     var adapter = EDFReaderAdapter()
-     if let fileName = $selectedFile.wrappedValue?.absoluteString {
-         adapter.read( std.string(fileName)  )
-     }
- }
- .buttonStyle(.bordered)
- */
 
 struct FilePickerView: View {
     @Binding var selectedFileURL: URL?

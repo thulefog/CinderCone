@@ -12,7 +12,8 @@
 #define EDFReader_hpp
 
 #include <stdio.h>
+#include <string>
 
-int edf_file_read();
+int edf_file_read( std::string );
 
 #endif /* EDFReader_hpp */

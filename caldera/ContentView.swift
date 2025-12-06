@@ -100,6 +100,12 @@ struct ContentView: View {
                     }
                     .buttonStyle(.bordered)
                 }
+                Button("Read Data File") {
+                    let fileName = "~/Downloads/sub-001_ses-t1_task-resteyesc_eeg.edf"
+                    let provider = EDFFormatProvider()
+                    provider.readFile(url: URL(fileURLWithPath: fileName))
+                }
+                .buttonStyle(.bordered)
             }
             .padding(.bottom)
         }

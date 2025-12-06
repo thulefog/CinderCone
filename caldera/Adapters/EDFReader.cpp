@@ -15,7 +15,7 @@
 
 #define SAMPLES_READ   (200)
 
-int edf_file_read() {
+int edf_file_read( std::string fileName ) {
     int i,
         hdl,
         channel,
@@ -25,7 +25,6 @@ int edf_file_read() {
 
     edflib_hdr_t hdr;
 
-    std::string fileName = "/Users/aquavit/Code/Standards/Imaging/CinderCone/sub-001_ses-t1_task-resteyesc_eeg.edf";
     /*
     if(argc!=3)
     {
@@ -39,6 +38,7 @@ int edf_file_read() {
       printf("\nsignalnumber must be > 0\n\n");
       return(1);
     }
+    printf("file name: %s", fileName.c_str());
 
     if(edfopen_file_readonly(fileName.c_str(), &hdr, EDFLIB_READ_ALL_ANNOTATIONS))
     {

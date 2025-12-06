@@ -10,5 +10,5 @@
 void EDFReaderAdapter::read( std::string fileName ) {
     std::cout << __FUNCTION__ << std::endl;
 
-    edf_file_read();
+    edf_file_read( fileName );
 };
