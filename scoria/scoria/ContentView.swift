@@ -7,10 +7,7 @@
 import SwiftUI
 import UIKit
 
-//..
 import AVKit
-import CoreImage
-import CoreImage.CIFilterBuiltins
 
 struct WorklistTaskItem: Identifiable, Hashable {
     let id = UUID()
@@ -116,12 +113,20 @@ struct ContentView: View {
                 Label("Worklist", systemImage: "list.bullet.clipboard")
             }
             
-            //  CaptureTab Embedded
-            CaptureTab()
-                .tabItem {
-                    Image(systemName: "film.stack")
-                    Text("Capture")
-                }
+            // MARK: Capture / Filter - Metal
+
+            // NOTE: CameraProcessingViewport and CameraMLView have common denominators, XOR contention for device with current code state
+            NavigationView {
+                CameraProcessingViewport()
+                    .navigationTitle("Capture")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem {
+                Label("Capture", systemImage: "film.stack")
+            }
+            
+            /* -----
+             // MARK: Filter - opencv2
             NavigationView {
                 ImageFilterView()
                     .navigationTitle("Filter")
@@ -130,22 +135,48 @@ struct ContentView: View {
             .tabItem {
                 Label("Filter", systemImage: "camera.filters")
             }
+            ----- */
+            
+            // MARK: Texture - Metal
+
+            NavigationView {
+                MetalTextureViewport()
+                .navigationTitle("Texture")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem {
+                Label("Texture", systemImage: "lizard")
+            }
+            
+            // MARK: Classifier
+            
+            // NOTE: functions with either YOLOv3 or MobileNetV2, one noticable difference of bounding box
+            NavigationView {
+                CameraMLView()
+                    .navigationTitle("Classifier")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem {
+                Label("Classifier", systemImage: "tortoise.circle")
+            }
+            
+            /*
+            // MARK: Predictor
             NavigationView {
                 PredictorView()
                     .navigationTitle("Predictor")
                     .navigationBarTitleDisplayMode(.inline)
             }
             .tabItem {
-                Label("Classifier", systemImage: "lizard.circle")
+                Label("Predictor", systemImage: "lizard.circle")
             }
+             */
 
             SettingsTab()
                 .tabItem {
                     Image(systemName: "gearshape.2")
                     Text("Settings")
                 }
-            
-            
         }.preferredColorScheme(.dark)
             .tint(.orange)
             .onAppear(perform: {
@@ -155,7 +186,77 @@ struct ContentView: View {
     }
 }
 
-// MARK: - First Tab (SwiftUI)
+// MARK: CaptureTab
+
+struct CaptureTab: View {
+    @State private var tabState = 1
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                
+                // DEPRECATE:
+                
+                // post iOS 26.x, remove dependency on open sourced code layers
+                // part of target sfhit to "from scratch" Metal viewer and camera implementation
+                // camera code behind has external open source dependency with observed start/stop rough edges
+                //
+                // MetalViewRepresentable > CameraViewController > MTKViewController > MetalCameraCaptureDevice > MetalCameraSession
+                // MetalViewRepresentable( state: $tabState )
+                //     .navigationTitle("Capture")
+                
+                // This iterations were spikes to explore options:
+                // MetalTextureViewport, CameraProcessingViewport, CameraMLView
+
+                HStack {
+                    Spacer( minLength: 10 )
+                    Divider()
+                    Button(action: {
+                        print("Handling user request")
+                        tabState = 1
+                        
+                    }) {
+                        Label("Start", systemImage: "water.waves")
+                    } // button
+                    .buttonStyle(.borderedProminent)
+                    .disabled(tabState == 1 )
+                    
+                    Button(action: {
+                        print("Handling user request")
+                        tabState = 0
+                    }) {
+                        Label("Stop", systemImage: "water.waves.slash")
+                    } // button
+                    .buttonStyle(.borderedProminent)
+                    .disabled(tabState == 0 )
+                    
+                    Button(action: {
+                        print("User action: flush the frames in temporary files directory")
+                        removeTemporaryFiles()
+                    }) {
+                        Label("Flush", systemImage: "toilet")
+                    } // button
+                    .buttonStyle(.borderedProminent)
+                    .tint(.gray)
+                    
+                    Divider()
+                    CustomGaugeView()
+                    //GaugeView(coveredRadius: 250, maxValue: 200, stepperSplit: 10, value: $value )
+                    
+                    Spacer( minLength: 10 )
+                    
+                }.frame(width: 500, height: 80) //hstack
+                Spacer( minLength: 10 )
+                 
+                
+            } // vstack
+        }// NOTE: toolbar intentionally removed to dedicate view space for camera  - revisit
+    }
+}
+
+
+// MARK: - Settings Tab
+
 struct SettingsTab: View {
     var body: some View {
         NavigationView {
@@ -205,273 +306,11 @@ func removeTemporaryFiles() {
     }
 }
 
-struct SpeedometerGaugeStyle: GaugeStyle {
-    private var purpleGradient = LinearGradient(gradient: Gradient(colors: [ .black,.gray,.white ]),
-                                                startPoint: .trailing, endPoint: .leading)
-
-    func makeBody(configuration: Configuration) -> some View {
-        ZStack {
-
-            Circle()
-                .foregroundColor(Color(.systemGray6))
-
-            Circle()
-                .trim(from: 0, to: 0.75 * configuration.value)
-                .stroke(purpleGradient, lineWidth: 5)
-                .rotationEffect(.degrees(135))
-
-            Circle()
-                .trim(from: 0, to: 0.75)
-                .stroke(Color.black, style: StrokeStyle(lineWidth: 10, lineCap: .butt, lineJoin: .round, dash: [1, 34], dashPhase: 0.0))
-                .rotationEffect(.degrees(135))
-
-            VStack {
-                configuration.currentValueLabel
-                    .font(.system(size: 12, weight: .thin, design: .rounded))
-                    .foregroundColor(.gray)
-                Text("Frame Rate [fps]")
-                    .font(.system(.caption2, design: .rounded))
-                    .bold()
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-            }
-
-        }
-        .frame(width: 68, height: 68)
-    }
-}
-
-struct CustomGaugeView: View {
-
-    @State private var currentSpeed = 140.0
-
-    var body: some View {
-        Gauge(value: currentSpeed, in: 0...200) {
-            Image(systemName: "gauge.medium")
-                .font(.system(size: 50.0))
-        } currentValueLabel: {
-            Text("\(currentSpeed.formatted(.number))")
-
-        }
-        .gaugeStyle(SpeedometerGaugeStyle())
-
-    }
-}
-
-struct CaptureTab: View {
-    @State private var tabState = 1
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                MetalViewRepresentable( state: $tabState )
-                    .navigationTitle("Capture")
-                //DecibelMeterView(decibelValue: 0)
-                HStack {
-                    Spacer( minLength: 10 )
-                    Divider()
-                    Button(action: {
-                        print("Handling user request")
-                        tabState = 1
-
-                    }) {
-                        Label("Start", systemImage: "water.waves")
-                    } // button
-                    .buttonStyle(.borderedProminent)
-                    .disabled(tabState == 1 )
-
-                    Button(action: {
-                        print("Handling user request")
-                        tabState = 0
-                    }) {
-                        Label("Stop", systemImage: "water.waves.slash")
-                    } // button
-                    .buttonStyle(.borderedProminent)
-                    .disabled(tabState == 0 )
-
-                    Button(action: {
-                        print("User action: flush the frames in temporary files directory")
-                        removeTemporaryFiles()
-                    }) {
-                        Label("Flush", systemImage: "toilet")
-                    } // button
-                    .buttonStyle(.borderedProminent)
-                    .tint(.gray)
-
-                    Divider()
-                    CustomGaugeView()
-                    //GaugeView(coveredRadius: 250, maxValue: 200, stepperSplit: 10, value: $value )
-
-                    Spacer( minLength: 10 )
-                }.frame(width: 500, height: 80)
-                Spacer( minLength: 10 )
-            } // vstack
-        }/*
-         .toolbar {
-             ToolbarItem(placement: .navigationBarTrailing) {
-                 Menu {
-                     Button(action: {
-                         // TODO
-                     }) {
-                         Label("About", systemImage: "info.circle")
-                     }
-                     
-                 } label: {
-                     Label("More", systemImage: "square.grid.3x3.square.badge.ellipsis")
-                 }
-             }
-         } // toolbar
-         */
-    }
-}
-
-struct MetalViewRepresentable: UIViewControllerRepresentable {
-    @Binding var state: Int
-    typealias UIViewControllerType = CameraViewController // Wrapped UIViewController subclass
-
-    func makeUIViewController(context: Context) -> UIViewControllerType {
-        return CameraViewController()
-    }
-    
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
-        // Update the UIViewController based on SwiftUI state if needed
-        print("\(#function): Requested session state: \(state).")
-
-        if state == 1 {
-            uiViewController.state = .streaming
-        } else if state == 0 {
-            uiViewController.state = .stopped
-        }
-    }
-}
 
 // MARK: - Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-    }
-}
-
-// TODO: REMOVE - deprecated
-
-// MARK: - Example UIKit, Embedded
-struct UIKitTab: View {
-    var body: some View {
-        NavigationView {
-            UIKitViewRepresentable()
-                .navigationTitle("UIKit Tab")
-        }
-    }
-}
-
-// MARK: - UIViewRepresentable for UIKit Integration
-struct UIKitViewRepresentable: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        return CustomUIKitView()
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        // Update the view if needed
-    }
-}
-
-// MARK: - Custom UIKit View
-class CustomUIKitView: UIView {
-    private let textLabel = UILabel()
-    private let colorButton = UIButton(type: .system)
-    private let slider = UISlider()
-    private let colorView = UIView()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupUI()
-    }
-    
-    private func setupUI() {
-        backgroundColor = .systemBackground
-        
-        // Configure text label
-        textLabel.text = "This is a UIKit View!"
-        textLabel.font = UIFont.boldSystemFont(ofSize: 24)
-        textLabel.textAlignment = .center
-        textLabel.textColor = .systemBlue
-        
-        // Configure button
-        colorButton.setTitle("Change Color", for: .normal)
-        colorButton.titleLabel?.font = UIFont.systemFont(ofSize: 18)
-        colorButton.backgroundColor = .systemBlue
-        colorButton.setTitleColor(.white, for: .normal)
-        colorButton.layer.cornerRadius = 8
-        colorButton.addTarget(self, action: #selector(changeColorTapped), for: .touchUpInside)
-        
-        // Configure slider
-        slider.minimumValue = 0
-        slider.maximumValue = 1
-        slider.value = 0.5
-        slider.addTarget(self, action: #selector(sliderValueChanged), for: .valueChanged)
-        
-        // Configure color view
-        colorView.backgroundColor = .systemBlue.withAlphaComponent(0.5)
-        colorView.layer.cornerRadius = 12
-        
-        // Add subviews
-        addSubview(textLabel)
-        addSubview(colorButton)
-        addSubview(slider)
-        addSubview(colorView)
-        
-        // Setup constraints
-        setupConstraints()
-    }
-    
-    private func setupConstraints() {
-        textLabel.translatesAutoresizingMaskIntoConstraints = false
-        colorButton.translatesAutoresizingMaskIntoConstraints = false
-        slider.translatesAutoresizingMaskIntoConstraints = false
-        colorView.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            // Text label
-            textLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            textLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 50),
-            
-            // Color view
-            colorView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            colorView.topAnchor.constraint(equalTo: textLabel.bottomAnchor, constant: 30),
-            colorView.widthAnchor.constraint(equalToConstant: 200),
-            colorView.heightAnchor.constraint(equalToConstant: 100),
-            
-            // Slider
-            slider.centerXAnchor.constraint(equalTo: centerXAnchor),
-            slider.topAnchor.constraint(equalTo: colorView.bottomAnchor, constant: 30),
-            slider.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 50),
-            slider.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -50),
-            
-            // Button
-            colorButton.centerXAnchor.constraint(equalTo: centerXAnchor),
-            colorButton.topAnchor.constraint(equalTo: slider.bottomAnchor, constant: 30),
-            colorButton.widthAnchor.constraint(equalToConstant: 150),
-            colorButton.heightAnchor.constraint(equalToConstant: 44)
-        ])
-    }
-    
-    @objc private func changeColorTapped() {
-        let colors: [UIColor] = [.systemBlue, .systemRed, .systemGreen, .systemOrange, .systemPurple]
-        let randomColor = colors.randomElement() ?? .systemBlue
-        
-        UIView.animate(withDuration: 0.3) {
-            self.colorView.backgroundColor = randomColor.withAlphaComponent(CGFloat(self.slider.value))
-            self.textLabel.textColor = randomColor
-        }
-    }
-    
-    @objc private func sliderValueChanged() {
-        colorView.alpha = CGFloat(slider.value)
     }
 }
 
