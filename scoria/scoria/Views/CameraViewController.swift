@@ -6,8 +6,35 @@
 //  Copyright © 2016 Old Yellow Bricks. All rights reserved.
 //
 
+import SwiftUI
 import UIKit
 import Metal
+
+// MARK: MetalViewRepresentable (outer)
+
+// MetalViewRepresentable > CameraViewController > MTKViewController > MetalCameraCaptureDevice > MetalCameraSession
+
+struct MetalViewRepresentable: UIViewControllerRepresentable {
+    @Binding var state: Int
+    typealias UIViewControllerType = CameraViewController // Wrapped UIViewController subclass
+
+    func makeUIViewController(context: Context) -> UIViewControllerType {
+        return CameraViewController()
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+        // Update the UIViewController based on SwiftUI state if needed
+        print("\(#function): Requested session state: \(state).")
+
+        if state == 1 {
+            uiViewController.state = .streaming
+        } else if state == 0 {
+            uiViewController.state = .stopped
+        }
+    }
+}
+
+// MARK: CameraViewController (inner)
 
 internal final class CameraViewController: MTKViewController {
     var sessionInitialized: Bool = false //...
