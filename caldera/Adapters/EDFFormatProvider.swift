@@ -33,6 +33,8 @@ NavigationView {
  .buttonStyle(.bordered)
  */
 
+// NOTE: the binding to pass string from Swift to C++ side described here:
+// https://www.swift.org/documentation/cxx-interop/#using-stdstring
 
 class EDFFormatProvider {
     func readFile(url: URL) {
