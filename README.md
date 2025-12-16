@@ -12,19 +12,40 @@ The original context for the code behind the original rough concept proof dates 
 
 This is a rewrite and modernization, leveraging code level lessons learned as well as changes and evolutions in the Apple frameworks and ecosystem.
 
+## Workflow Summary
+
 Reference the breakdown of the workflow features summarized in the table below.
 
 |Workflow|Description|
 |--|--|
 | Worklist | Editable list with workflow step summaries | 
-| Capture | Camera based on `AVFoundation` with select Metal based texture shaders and frame capture  |
-| Filter | Minimal image filter set based on OpenCV2 |
+| Capture  / Filter | Camera based on Metal with texture shaders and a streamlined processing pipeline  |
+| Texture | Minimal image viewer using a `Metal` texture based canvas  |
 | Classifier | Minimal image classification based on the `MobileNet` model |
 | Settings | Configuration area - examples would be Foundation Model selections |
 
 For now, the `Worklist` view is simply a static recipe of steps to illustrate what the application does. 
 
-This path could rough in results from fetched from a remote node, data from the REST endpoint - e.g. one based on Python and Flask.
+## User Interface
+
+See below for the current works in progress implementation, an evolutionary iteration increment forward in the area of latest Swift concurrency.
+
+| Cinder Code | 
+|--|--|
+| <img src="/statics/cinder-summary.png" alt="select" width="256"> | 
+
+# Software Blueprint
+
+The rough blueprint for key areas in the iOS application system are as follows:
+
+- Type System
+- Providers
+- Models
+- Views
+
+There are some areas with caution tape around called `Widgets` that provides early implemenations `from scratch` that are being proved out. As a side note - the Foundation Model choices settle (public domain or custom) and as a general design surface - there is a potential for select `Adapters` to surface. Typically, they reside behind `Providers` and help add abstraction.
+
+## Implementation Notes
 
 * Capture
 
@@ -32,51 +53,36 @@ The camera device and session is opened and each static image frame is loaded in
 
 Note that the Metal view, which is UIKit, is actually hosted in a SwiftUI view, making use of the `UIViewControllerRepresentable` delegate and technique to bridge the two UI paradigms.
 
-The seed Providers for the purposes of this rough concept proof were some of the prior work used as a reference point to ramp up on Metal in 2018.
-
 * Filter
 
-Currently an elevated feature but could shift be nested in a Classification or Segmentation workflow context.
+The initial concept proof caliber `Filter` pathway was realized based on `OpenCV2` but is being reworked from scratch as a `Metal` pipeline. Based on the seismic shift in the area of concurrency in the from Swift language from versions 5 to 6.x, it was an objective to remove some open source layers and shift to from scratch for complete control code level of the code paths.
 
 * Classifier
 
-Reference this code example which was uses `MobileNet` model
-[Apple Sample Code: Classifying Images with Vision and Core ML](https://developer.apple.com/documentation/coreml/classifying-images-with-vision-and-core-ml)
+There are relevant Foundational Models for Classification are being tested out largely just to exercise the pipeline for now. Reference the information on [Apple: Core ML Models](https://developer.apple.com/machine-learning/models)
 
-No parts of this code sample were used but uses a diffent `Core ML Model`, `ObjectDetector`
-[Apple Sample Code: Recognizing Objects in Live Capture](
-https://developer.apple.com/documentation/vision/recognizing-objects-in-live-capture)
+Models worth calling out include `YOLOv3` and `MobileNetV2`. 
+
+Elsewhere, for Segmentation - of note are [github: MedSAM2](https://github.com/bowang-lab/MedSAM2) / [hugging face: MedSA23](https://huggingface.co/wanglab/MedSAM2)
 
 # References
+See below for select areas of code or documentation used as guidance.
 
-[Apple: Core ML Models](https://developer.apple.com/machine-learning/models)
-
-[Metal Programming Guide,  Janie Clayton, Addison-Wesley, 2017](https://www.safaribooksonline.com/library/view/metal-programming-guide/9780134668963/ch06.xhtml)
-
-[Apple Developer Sample Code: Metal samples](https://developer.apple.com/search/?q=metal%20sample&type=Sample%20Code)
-
-## Capture Pathway: AVFoundation, Metal
+## Prior Work
 
 NOTE: 
 - The original version sourced images from already acquired frame file sequence and texture shader to render as the intention was to illustrate riffing through an ultrasound image clip or movie. The code was shifted away to files and not use the device camera.
 - Past work on `AVFoundation` realized a camera in iOS, but with a spin that the frames were displayed after being loaded into a Texture in a Shader in a Metal view.
 
-Reference external dependency or SOUP that will be removed - the `MetalRenderCamera` project code repository on Github. This project has been around for awhile and it was a good Metal camera reference implementation even back in 2016-2018. It also provided low friction example(s) of Texture handling Shaders as well.
+Reference external dependency or SOUP removed from the mix. The open source project code repository on Github [MetalRenderCamera](https://github.com/alexstaravoitau/MetalRenderCamera) proved useful since around 2017. That project  was a good Metal camera reference implementation and select layers reusable rouhgly verbatim. It also provided low friction example(s) of Texture handling Shaders as well. Evidence showed that it needed repair in the area of frame capture start and stop for an active `Metal` pipeline and had some collisions with known concurrency issues that were raised around `AVFoundation` and Swift 5 and 6. 
 
- [ MetalRenderCamera](https://github.com/alexstaravoitau/MetalRenderCamera)
+- [Apple Developer Sample Code: Metal samples](https://developer.apple.com/search/?q=metal%20sample&type=Sample%20Code)
+- [Apple Sample Code: Classifying Images with Vision and Core ML](https://developer.apple.com/documentation/coreml/classifying-images-with-vision-and-core-ml)
+- [Apple Sample Code: Recognizing Objects in Live Capture](https://developer.apple.com/documentation/vision/recognizing-objects-in-live-capture)
+- [Apple Developer Sample: Building a Camera APP, avcam](https://developer.apple.com/documentation/AVFoundation/avcam-building-a-camera-app)
 
-The open source project wired in has some collisions with known concurrency issues that were raised around `AVFoundation` and Swift 5 and 6. A recently published approach from Apple in the form of a ground up rewrite of a Metal based camera is URLd below. It requires iOS 26 and will be approached when I have an iPhone that has been upgraded to 26.
+The `avcam` Apple sample application advertised to be a reinvention of the approach around `AVFoundation` and `Metal` to realize a camera capture pathway with better concurrency in theory post iOS 26.x. From code walkthrough it does appear to bring things in line with latest Swift concurrency aspects but would take some refactoring to shift to a `MTLTexture` paradigm and has some complexity to work out.
 
-Reference this (new) Apple sample application that advertises to be a reinvention of the approach around `AVFoundation` and `Metal` to realize a camera capture pathy. From code walkthrough appears to bring things in line with latest Swift concurrency aspects.
-
-[Apple Developer Sample: Building a Camera APP, avcam](https://developer.apple.com/documentation/AVFoundation/avcam-building-a-camera-app)
-
- See also below as a cross references:
- 
- https://stackoverflow.com/questions/43838089/capture-metal-mtkview-as-movie-in-realtime/43860229#43860229
- https://developer.apple.com/metal/sample-code/
- 
- 
 # Software License
 
 Selected components of this project are a derivative of MetalRenderCamera, originally licensed under the Apache License, Version 2.0. This version includes additional modifications described herein. Portions of this code are reproduced under the terms of the Apache License, Version 2.0.
