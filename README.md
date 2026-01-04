@@ -1,6 +1,6 @@
-# Scoria
+# Cinder Cone
 
-Scoria is a reference to the proper name for lava rock or cinder and a Cinder Cone is a specific type of volcano formed when cinder fragments ejected from the volcano.
+The term `Cinder Cone` is a specific type of volcano formed when cinder fragments ejected from the volcano.
 
 First, the points to fact that enabling the iPhone camera as a capture device and channeling to a Metal pipeline creates an explosion of pixel data, a volcano of sorts.
 
