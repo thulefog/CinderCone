@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  scoria
+//  CinderCone
 //
 //  Created by John Matthew Weston on 9/1/25.
 //

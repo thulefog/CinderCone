@@ -30,7 +30,7 @@ For now, the `Worklist` view is simply a static recipe of steps to illustrate wh
 
 See below for the current works in progress implementation, an evolutionary iteration increment forward in the area of latest Swift concurrency.
 
-| Cinder Code | 
+| Cinder Cone | 
 |--|
 | <img src="/statics/cinder-summary.png" alt="select" width="256"> | 
 

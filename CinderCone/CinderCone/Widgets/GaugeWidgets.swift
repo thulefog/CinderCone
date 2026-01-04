@@ -1,6 +1,6 @@
 //
 //  SpeedometerGaugeStyle.swift
-//  scoria
+//  CinderCone
 //
 //  Created by John Matthew Weston on 12/12/25.
 //
