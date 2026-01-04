@@ -62,9 +62,10 @@ The static data path to display a single frame image is based on the following v
 
 > MetalTextureViewport > MetalTextureView > TextureDisplayView
 
-As a historical note, the `DrawableTextureViewController` was realized in 2018 but reworked as the view hierachy beow
+The hosted Metal view, which is UIKit, is actually hosted in a SwiftUI view, making use of the `UIViewControllerRepresentable` delegate and technique to bridge the two UI paradigms.
 
-Note that the Metal view, which is UIKit, is actually hosted in a SwiftUI view, making use of the `UIViewControllerRepresentable` delegate and technique to bridge the two UI paradigms.
+As a historical note, the `DrawableTextureViewController` was realized in 2018 but reworked as the view hierarchy above as part of the upleveling to Swift 6.x.
+
 
 ## Classifier
 
