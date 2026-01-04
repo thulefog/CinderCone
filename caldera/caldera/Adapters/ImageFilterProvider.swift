@@ -8,6 +8,9 @@ import SwiftUI
 import opencv2 //OpenCV
 
 // MARK: - ImageFilterProvider - OpenCV
+
+// NB: This was derived from initial implementation for iOS, generalized for macOS
+// The grayscale conversion path (cvtColor) has data input sensitivities to unwind (valid data that glitches out)
 class ImageFilterProvider {
 #if os(macOS)
 
