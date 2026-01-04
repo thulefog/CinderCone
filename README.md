@@ -47,17 +47,30 @@ There are some areas with caution tape around called `Widgets` that provides ear
 
 ## Implementation Notes
 
-* Capture
+### Capture 
 
-The camera device and session is opened and each static image frame is loaded into a Texture, passing through a Shader (compose style) and displayed in a Metal view. 
+The dynamic camera device capture path is based on Metal. Once capture session is opened, each static image frame is loaded into a Texture, passing through a Shader and displayed in a Metal view. These shaders are implemented as kernel functions and enable the definiition or composition of different sequences or combinations of steps.
+
+The current `Capture` view hierarchy is as follows:
+
+> CameraProcessingViewport > MetalCameraPreview (middle) > MetalCameraView (inner)
+
+The initial concept proof caliber `Filter` pathway was realized was based on `OpenCV2`. Based on some observed quirks with converting color images to grayscale, the path is being refactored as a `Metal` pipeline to use Shaders instead. Based on the seismic shift in the area of concurrency in the from Swift language from versions 5 to 6.x, it was an objective to remove some open source layers and shift to from scratch for complete control code level of the code paths.
+
+### Texture
+The static data path to display a single frame image is based on the following view hierarchy:
+
+> MetalTextureViewport > MetalTextureView > TextureDisplayView
+
+As a historical note, the `DrawableTextureViewController` was realized in 2018 but reworked as the view hierachy beow
 
 Note that the Metal view, which is UIKit, is actually hosted in a SwiftUI view, making use of the `UIViewControllerRepresentable` delegate and technique to bridge the two UI paradigms.
 
-* Filter
+## Classifier
 
-The initial concept proof caliber `Filter` pathway was realized based on `OpenCV2` but is being reworked from scratch as a `Metal` pipeline. Based on the seismic shift in the area of concurrency in the from Swift language from versions 5 to 6.x, it was an objective to remove some open source layers and shift to from scratch for complete control code level of the code paths.
+The current `Classifier` view hierarchy shares some common ingredients with the `Capture` pathway - revised and updated for Swift 6.x
 
-* Classifier
+> CameraMLView (outer) > CameraPreviewView (middle) > MetalCameraView (inner)
 
 There are relevant Foundational Models for Classification are being tested out largely just to exercise the pipeline for now. Reference the information on [Apple: Core ML Models](https://developer.apple.com/machine-learning/models)
 
