@@ -20,13 +20,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D710ADF62E6679BC008AC52A /* scoria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = scoria.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D710ADF62E6679BC008AC52A /* CinderCone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CinderCone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D710ADF82E6679BC008AC52A /* scoria */ = {
+		D710ADF82E6679BC008AC52A /* CinderCone */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = scoria;
+			path = CinderCone;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		D710ADED2E6679BC008AC52A = {
 			isa = PBXGroup;
 			children = (
-				D710ADF82E6679BC008AC52A /* scoria */,
+				D710ADF82E6679BC008AC52A /* CinderCone */,
 				D710AE172E66A628008AC52A /* Frameworks */,
 				D710ADF72E6679BC008AC52A /* Products */,
 			);
@@ -54,7 +54,7 @@
 		D710ADF72E6679BC008AC52A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D710ADF62E6679BC008AC52A /* scoria.app */,
+				D710ADF62E6679BC008AC52A /* CinderCone.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -69,9 +69,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D710ADF52E6679BC008AC52A /* scoria */ = {
+		D710ADF52E6679BC008AC52A /* CinderCone */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D710AE012E6679BE008AC52A /* Build configuration list for PBXNativeTarget "scoria" */;
+			buildConfigurationList = D710AE012E6679BE008AC52A /* Build configuration list for PBXNativeTarget "CinderCone" */;
 			buildPhases = (
 				D710ADF22E6679BC008AC52A /* Sources */,
 				D710ADF32E6679BC008AC52A /* Frameworks */,
@@ -83,13 +83,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D710ADF82E6679BC008AC52A /* scoria */,
+				D710ADF82E6679BC008AC52A /* CinderCone */,
 			);
-			name = scoria;
+			name = CinderCone;
 			packageProductDependencies = (
 			);
 			productName = scoria;
-			productReference = D710ADF62E6679BC008AC52A /* scoria.app */;
+			productReference = D710ADF62E6679BC008AC52A /* CinderCone.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -107,7 +107,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D710ADF12E6679BC008AC52A /* Build configuration list for PBXProject "Scoria" */;
+			buildConfigurationList = D710ADF12E6679BC008AC52A /* Build configuration list for PBXProject "CinderCone" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -121,7 +121,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D710ADF52E6679BC008AC52A /* scoria */,
+				D710ADF52E6679BC008AC52A /* CinderCone */,
 			);
 		};
 /* End PBXProject section */
@@ -281,7 +281,7 @@
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/scoria/Externals",
+					"$(PROJECT_DIR)/CinderCone/Externals",
 				);
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -297,7 +297,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = co.aquavit.scoria;
+				PRODUCT_BUNDLE_IDENTIFIER = "co.aquavit.cinder-cone";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_INTEROP_MODE = objcxx;
@@ -317,7 +317,7 @@
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/scoria/Externals",
+					"$(PROJECT_DIR)/CinderCone/Externals",
 				);
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -333,7 +333,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = co.aquavit.scoria;
+				PRODUCT_BUNDLE_IDENTIFIER = "co.aquavit.cinder-cone";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_INTEROP_MODE = objcxx;
@@ -345,7 +345,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D710ADF12E6679BC008AC52A /* Build configuration list for PBXProject "Scoria" */ = {
+		D710ADF12E6679BC008AC52A /* Build configuration list for PBXProject "CinderCone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D710ADFF2E6679BE008AC52A /* Debug */,
@@ -354,7 +354,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D710AE012E6679BE008AC52A /* Build configuration list for PBXNativeTarget "scoria" */ = {
+		D710AE012E6679BE008AC52A /* Build configuration list for PBXNativeTarget "CinderCone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D710AE022E6679BE008AC52A /* Debug */,
