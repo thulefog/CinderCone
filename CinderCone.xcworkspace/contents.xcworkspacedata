@@ -2,9 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:scoria/Scoria.xcodeproj">
+      location = "group:CinderCone/CinderCone.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:Caldera.xcodeproj">
+      location = "group:caldera/Caldera.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:kanaga/Kanaga.xcodeproj">
    </FileRef>
 </Workspace>
