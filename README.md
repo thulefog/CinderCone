@@ -64,9 +64,6 @@ The static data path to display a single frame image is based on the following v
 
 The hosted Metal view, which is UIKit, is actually hosted in a SwiftUI view, making use of the `UIViewControllerRepresentable` delegate and technique to bridge the two UI paradigms.
 
-As a historical note, the `DrawableTextureViewController` was realized in 2018 but reworked as the view hierarchy above as part of the upleveling to Swift 6.x.
-
-
 ## Classifier
 
 The current `Classifier` view hierarchy shares some common ingredients with the `Capture` pathway - revised and updated for Swift 6.x
@@ -82,11 +79,12 @@ Elsewhere, for Segmentation - of note are [github: MedSAM2](https://github.com/b
 # References
 See below for select areas of code or documentation used as guidance.
 
-## Prior Work
+## Prior Work: Historical Notes 🌋
 
 NOTE: 
-- The original version sourced images from already acquired frame file sequence and texture shader to render as the intention was to illustrate riffing through an ultrasound image clip or movie. The code was shifted away to files and not use the device camera.
+- The original version sourced images from already acquired frame file sequence. The set of static image frames texture shader to render as the intention was to illustrate riffing through an ultrasound image clip or movie. The code was shifted away to files and not use the device camera.
 - Past work on `AVFoundation` realized a camera in iOS, but with a spin that the frames were displayed after being loaded into a Texture in a Shader in a Metal view.
+- The `DrawableTextureViewController` was realized in 2018 but reworked as the view hierarchy above as part of the upleveling to Swift 6.x. Reference the implementation notes for how code has evolved forward.
 
 Reference external dependency or SOUP removed from the mix. The open source project code repository on Github [MetalRenderCamera](https://github.com/alexstaravoitau/MetalRenderCamera) proved useful since around 2017. That project  was a good Metal camera reference implementation and select layers reusable rouhgly verbatim. It also provided low friction example(s) of Texture handling Shaders as well. Evidence showed that it needed repair in the area of frame capture start and stop for an active `Metal` pipeline and had some collisions with known concurrency issues that were raised around `AVFoundation` and Swift 5 and 6. 
 
