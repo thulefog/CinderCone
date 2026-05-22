@@ -32,7 +32,7 @@ See below for the current works in progress implementation, an evolutionary iter
 
 | Cinder Cone | 
 |--|
-| <img src="/statics/cinder-capture.png" alt="select" width="256"> |
+| <img src="/statics/cinder-camera.png" alt="select" width="256"> |
 
 # Software Blueprint
 
