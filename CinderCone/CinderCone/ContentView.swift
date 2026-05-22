@@ -33,22 +33,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Capture", systemImage: "film.stack")
             }
-            
-            /* -----
-             // MARK: Filter - opencv2
-             
-            NOTE: opencv approach being refactored out and alternative path based on Metal shaders replacing
-             
-            NavigationView {
-                ImageFilterView()
-                    .navigationTitle("Filter")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-            .tabItem {
-                Label("Filter", systemImage: "camera.filters")
-            }
-            ----- */
-            
+
             // MARK: Texture - Metal
 
             NavigationView {
@@ -72,28 +57,16 @@ struct ContentView: View {
                 Label("Classifier", systemImage: "tortoise.circle")
             }
             
-            /*
-            // MARK: Predictor
-            NavigationView {
-                PredictorView()
-                    .navigationTitle("Predictor")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-            .tabItem {
-                Label("Predictor", systemImage: "lizard.circle")
-            }
-             */
-
             SettingsTab()
                 .tabItem {
                     Image(systemName: "gearshape.2")
                     Text("Settings")
                 }
         }.preferredColorScheme(.dark)
-            .tint(.orange)
+            .tint(coneAmber)
             .onAppear(perform: {
                 UITabBar.appearance().unselectedItemTintColor = .systemGray
-                UITabBarItem.appearance().badgeColor = .systemOrange
+                UITabBarItem.appearance().badgeColor = UIColor(coneAmber)
             })
     }
 }

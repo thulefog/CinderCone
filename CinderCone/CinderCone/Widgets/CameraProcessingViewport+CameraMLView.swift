@@ -1089,52 +1089,75 @@ typealias ViewRepresentable = NSViewRepresentable
 */
 
 struct MetalCameraPreview: ViewRepresentable {
-    
+
     let aspectRatioMode: AspectRatioMode
     let processor: TextureProcessor?
     let onFrame: ((MTLTexture) -> Void)?
-    
+    @Binding var isRecording: Bool
+    @Binding var savedVideoURL: URL?
+
     init(
         aspectRatioMode: AspectRatioMode = .fit,
         processor: TextureProcessor? = nil,
+        isRecording: Binding<Bool> = .constant(false),
+        savedVideoURL: Binding<URL?> = .constant(nil),
         onFrame: ((MTLTexture) -> Void)? = nil
     ) {
         self.aspectRatioMode = aspectRatioMode
         self.processor = processor
+        self._isRecording = isRecording
+        self._savedVideoURL = savedVideoURL
         self.onFrame = onFrame
     }
-    
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
     #if os(iOS)
     func makeUIView(context: Context) -> MetalCameraView {
-        makeView()
+        makeView(context: context)
     }
-    
     func updateUIView(_ view: MetalCameraView, context: Context) {
-        updateView(view)
+        updateView(view, context: context)
     }
     #else
     func makeNSView(context: Context) -> MetalCameraView {
-        makeView()
+        makeView(context: context)
     }
-    
     func updateNSView(_ view: MetalCameraView, context: Context) {
-        updateView(view)
+        updateView(view, context: context)
     }
     #endif
-    
-    private func makeView() -> MetalCameraView {
+
+    private func makeView(context: Context) -> MetalCameraView {
         let view = MetalCameraView(frame: .zero, device: MTLCreateSystemDefaultDevice())
         view.aspectRatioMode = aspectRatioMode
         view.textureProcessor = processor
         view.onFrameRendered = onFrame
         view.startCamera(position: .back)
+        context.coordinator.view = view
         return view
     }
-    
-    private func updateView(_ view: MetalCameraView) {
+
+    private func updateView(_ view: MetalCameraView, context: Context) {
         view.aspectRatioMode = aspectRatioMode
         view.textureProcessor = processor
         view.onFrameRendered = onFrame
+
+        if isRecording && !view.isRecording {
+            try? view.startRecording()
+        } else if !isRecording && view.isRecording {
+            Task {
+                if let url = await view.stopRecording() {
+                    await MainActor.run { savedVideoURL = url }
+                }
+            }
+        }
+    }
+
+    class Coordinator {
+        var parent: MetalCameraPreview
+        weak var view: MetalCameraView?
+        init(_ parent: MetalCameraPreview) { self.parent = parent }
     }
 }
 
@@ -1142,70 +1165,266 @@ struct MetalCameraPreview: ViewRepresentable {
 
 // CameraProcessingViewport > MetalCameraPreview (middle) > MetalCameraView (inner)
 
+enum CaptureMode { case image, clip }
+
 struct CameraProcessingViewport: View {
-    
+
     @State private var aspectMode: AspectRatioMode = .fit
     @State private var brightness: Float = 0.0
     @State private var contrast: Float = 1.0
     @State private var saturation: Float = 1.0
     @State private var enableGrayscale = false
-    
+    @State private var captureMode: CaptureMode = .clip
+    @State private var isRecording = false
+    @State private var savedVideoURL: URL?
+    @State private var recordingTime: TimeInterval = 0
+    @State private var captureNextFrame = false
+    @State private var shareItems: [Any] = []
+    @State private var showShareSheet = false
+    @State private var settingsTrayExpanded = false
+
     private let device = MTLCreateSystemDefaultDevice()!
-    
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+
     var body: some View {
         VStack(spacing: 0) {
-            MetalCameraPreview(
-                aspectRatioMode: aspectMode,
-                processor: buildProcessor(),
-                onFrame: { texture in
-                    // Access each processed frame here
-                    // e.g., for recording, ML inference, etc.
+            // Camera area — tray anchored to its bottom-leading corner
+            ZStack(alignment: .bottomLeading) {
+                // Camera feed + recording badge
+                ZStack(alignment: .bottom) {
+                    MetalCameraPreview(
+                        aspectRatioMode: aspectMode,
+                        processor: buildProcessor(),
+                        isRecording: $isRecording,
+                        savedVideoURL: $savedVideoURL,
+                        onFrame: { texture in
+                            guard captureNextFrame else { return }
+                            if let image = textureToImage(texture) {
+                                DispatchQueue.main.async {
+                                    captureNextFrame = false
+                                    shareItems = [image]
+                                    showShareSheet = true
+                                }
+                            }
+                        }
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea(.container, edges: .bottom)
+
+                    if isRecording {
+                        HStack(spacing: 6) {
+                            Circle().fill(coneAmber).frame(width: 7, height: 7)
+                            Text(formatTime(recordingTime))
+                                .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .colorScheme(.dark)
+                        .padding(.bottom, 8)
+                    }
                 }
-            )
-            .ignoresSafeArea()
-            
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                // Settings tray — collapses to a small icon, expands upward
+                settingsTray
+                    .padding(12)
+            }
+
             controlPanel
         }
+        .onReceive(timer) { _ in if isRecording { recordingTime += 0.1 } }
+        .onChange(of: savedVideoURL) { _, url in
+            if let url {
+                shareItems = [url]
+                showShareSheet = true
+                savedVideoURL = nil
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: shareItems)
+        }
     }
-    
+
+    // MARK: - Settings Tray (lower-left camera overlay)
+
+    private var settingsTray: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if settingsTrayExpanded {
+                VStack(alignment: .leading, spacing: 14) {
+                    ManettinoSelector(
+                        label: "Aspect",
+                        options: [
+                            (label: "Fit",  value: AspectRatioMode.fit),
+                            (label: "Fill", value: AspectRatioMode.fill),
+                            (label: "Str",  value: AspectRatioMode.stretch)
+                        ],
+                        selection: $aspectMode,
+                        ringR: 22, labelR: 30, knobR: 12
+                    )
+
+                    PushButton(label: "Grayscale", systemImage: "circle.lefthalf.filled",
+                               isOn: $enableGrayscale, size: 36)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Mode")
+                            .font(coneLabelFont)
+                            .foregroundColor(coneLabelColor)
+                            .kerning(1.2)
+                            .textCase(.uppercase)
+                        HStack(spacing: 12) {
+                            modeTab("Static", mode: .image)
+                            modeTab("Clip",   mode: .clip)
+                        }
+                    }
+                }
+                .padding(12)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .colorScheme(.dark)
+                .transition(
+                    .scale(scale: 0.82, anchor: .bottomLeading)
+                    .combined(with: .opacity)
+                )
+            }
+
+            // Toggle button — slider icon collapses to xmark when open
+            Button {
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.72)) {
+                    settingsTrayExpanded.toggle()
+                }
+            } label: {
+                Image(systemName: settingsTrayExpanded ? "xmark.circle.fill" : "slider.horizontal.3")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(settingsTrayExpanded ? coneAmber : Color.white.opacity(0.80))
+                    .frame(width: 34, height: 34)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .colorScheme(.dark)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Control Panel (dials + shutter — full width, centered)
+
     private var controlPanel: some View {
-        VStack(spacing: 12) {
-            // Aspect ratio picker
-            Picker("Aspect", selection: $aspectMode) {
-                Text("Fit").tag(AspectRatioMode.fit)
-                Text("Fill").tag(AspectRatioMode.fill)
-                Text("Stretch").tag(AspectRatioMode.stretch)
+        HStack(alignment: .center, spacing: 0) {
+            Spacer(minLength: 0)
+            HStack(spacing: 20) {
+                AnalogKnob(label: "Brightness", value: $brightness, range: -1...1, format: "%+.2f", size: 72)
+                AnalogKnob(label: "Contrast",   value: $contrast,   range:  0...2, format: "%.2f",  size: 72)
+                AnalogKnob(label: "Saturation", value: $saturation, range:  0...2, format: "%.2f",  size: 72)
             }
-            .pickerStyle(.segmented)
-            
-            Toggle("Grayscale", isOn: $enableGrayscale)
-            
-            if !enableGrayscale {
-                LabeledSlider("Brightness", value: $brightness, range: -1...1)
-                LabeledSlider("Contrast", value: $contrast, range: 0...2)
-                LabeledSlider("Saturation", value: $saturation, range: 0...2)
-            }
+            .opacity(enableGrayscale ? 0.28 : 1.0)
+            .animation(.easeInOut(duration: 0.22), value: enableGrayscale)
+
+            Spacer(minLength: 20)
+            captureButton
+            Spacer(minLength: 0)
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(.ultraThinMaterial)
+        .colorScheme(.dark)
     }
-    
+
+    // MARK: - Capture Button (shutter only — mode set via tray)
+
+    private var captureButton: some View {
+        VStack(spacing: 4) {
+            Button { triggerCapture() } label: {
+                ZStack {
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.55), lineWidth: 2.5)
+                        .frame(width: 46, height: 46)
+                    if captureMode == .clip && isRecording {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(coneAmber)
+                            .frame(width: 17, height: 17)
+                    } else {
+                        Circle()
+                            .fill(coneAmber)
+                            .frame(width: 34, height: 34)
+                    }
+                }
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isRecording)
+            }
+            .buttonStyle(.plain)
+
+            Text(captureMode == .clip && isRecording ? "Stop" : "Capture")
+                .font(coneLabelFont)
+                .foregroundColor(isRecording ? coneAmber : coneLabelColor)
+                .kerning(1.2)
+                .textCase(.uppercase)
+                .fixedSize()
+                .animation(.easeInOut(duration: 0.2), value: isRecording)
+        }
+    }
+
+    private func modeTab(_ label: String, mode: CaptureMode) -> some View {
+        let selected = captureMode == mode
+        return Text(label)
+            .font(coneLabelFont)
+            .foregroundColor(selected ? coneAmber : coneLabelColor.opacity(0.45))
+            .kerning(1.0)
+            .textCase(.uppercase)
+            .onTapGesture { captureMode = mode }
+    }
+
+    // MARK: - Actions
+
+    private func triggerCapture() {
+        switch captureMode {
+        case .image:
+            captureNextFrame = true
+        case .clip:
+            isRecording.toggle()
+            if !isRecording { recordingTime = 0 }
+        }
+    }
+
+    private func textureToImage(_ texture: MTLTexture) -> UIImage? {
+        let w = texture.width, h = texture.height, bpr = w * 4
+        var bytes = [UInt8](repeating: 0, count: bpr * h)
+        texture.getBytes(&bytes, bytesPerRow: bpr,
+                         from: MTLRegionMake2D(0, 0, w, h), mipmapLevel: 0)
+        guard let provider = CGDataProvider(data: Data(bytes) as CFData),
+              let cg = CGImage(width: w, height: h,
+                               bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bpr,
+                               space: CGColorSpaceCreateDeviceRGB(),
+                               bitmapInfo: CGBitmapInfo(rawValue:
+                                   CGBitmapInfo.byteOrder32Little.rawValue |
+                                   CGImageAlphaInfo.premultipliedFirst.rawValue),
+                               provider: provider, decode: nil,
+                               shouldInterpolate: false, intent: .defaultIntent)
+        else { return nil }
+        return UIImage(cgImage: cg)
+    }
+
+    private func formatTime(_ t: TimeInterval) -> String {
+        let m = Int(t) / 60; let s = Int(t) % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+
     private func buildProcessor() -> TextureProcessor? {
-        if enableGrayscale {
-            return GrayscaleProcessor(device: device)
-        }
-        
-        // Only create color processor if values differ from defaults
+        if enableGrayscale { return GrayscaleProcessor(device: device) }
         if brightness != 0 || contrast != 1 || saturation != 1 {
-            let processor = ColorAdjustmentProcessor(device: device)
-            processor.brightness = brightness
-            processor.contrast = contrast
-            processor.saturation = saturation
-            return processor
+            let p = ColorAdjustmentProcessor(device: device)
+            p.brightness = brightness; p.contrast = contrast; p.saturation = saturation
+            return p
         }
-        
         return nil
     }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
 
 struct LabeledSlider: View {
@@ -1334,6 +1553,7 @@ struct CameraMLView: View {
             // Recording indicator
             if isRecording {
                 HStack {
+
                     Circle()
                         .fill(.red)
                         .frame(width: 12, height: 12)

@@ -4,10 +4,4 @@
    <FileRef
       location = "group:CinderCone/CinderCone.xcodeproj">
    </FileRef>
-   <FileRef
-      location = "group:caldera/Caldera.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:kanaga/Kanaga.xcodeproj">
-   </FileRef>
 </Workspace>
